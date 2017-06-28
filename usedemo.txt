@@ -1,0 +1,7 @@
+   android studio gradle:
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
+    compile 'com.squareup.okio:okio:1.8.0'
+
+ mothed01:new FileDownLoadHelper().showDownLoadProgress(url,context)
+ mothed02:new UpdateApp().showDownLoadProgress(url,context)
+  
