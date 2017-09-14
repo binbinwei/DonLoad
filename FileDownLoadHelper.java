@@ -5,13 +5,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.widget.Toast;
 import java.io.File;
-
 /**
  * Created by weibinbin on 2017/6/6.
+ *
  */
-
 public class FileDownLoadHelper {
     // 外存sdcard存放路径
     private static final String FILE_PATH = Environment.getExternalStorageDirectory() +"/" + "BaoWu" +"/";
@@ -19,8 +20,24 @@ public class FileDownLoadHelper {
     private static  String FILE_NAME ="";
     // 下载应用的进度条
     private ProgressDialog progressDialog;
-
+    private static FileDownLoadHelper fileDownLoadHelper;
+    private Context context;
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            progressDialog.dismiss();//关闭进度条
+            Toast.makeText(context,"下载失败", Toast.LENGTH_SHORT).show();
+        }
+    };
+    public static FileDownLoadHelper getDownLoadInstance(){
+        if(fileDownLoadHelper == null){
+            fileDownLoadHelper = new FileDownLoadHelper();
+        }
+        return fileDownLoadHelper;
+    }
     public void showDownLoadProgress(String url,Context context){
+        this.context = context;
         progressDialog = new ProgressDialog(context);
         progressDialog.setTitle("正在下载...");
         progressDialog.setCanceledOnTouchOutside(false);
@@ -48,8 +65,7 @@ public class FileDownLoadHelper {
             }
             @Override
             public void onDownloadFailed() {
-                progressDialog.dismiss();//关闭进度条
-                Toast.makeText(context,"下载失败", Toast.LENGTH_SHORT).show();
+              handler.sendEmptyMessage(1);
             }
         });
     }
@@ -58,30 +74,20 @@ public class FileDownLoadHelper {
      */
     private void installApp(Context context,File file) {
         // 跳转到新版本应用安装页面
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);//android 4.0之前可不加 4.0之后不加会出现安装成功后没有打开界面
         intent.setDataAndType(Uri.parse("file://" + file.toString()), "application/vnd.android.package-archive");
         context.startActivity(intent);
     }
-
-    /**
-     * @param url
-     * @return
-     * 从下载连接中解析出文件名
-     */
-    private String getNameFromUrl(String url) {
-        return url.substring(url.lastIndexOf("/") + 1);
-    }
-
-
 }
 
-//Dialog中确定按钮的监听器
-class SureButtonListener implements android.content.DialogInterface.OnClickListener{
-
+/**
+ * 取消下载
+ */
+class SureButtonListener implements DialogInterface.OnClickListener{
     public void onClick(DialogInterface dialog, int which) {
-        //点击“确定按钮”取消对话框
         DownloadUtil.get().cancelDownLoad();
         dialog.cancel();
     }
-
 }
